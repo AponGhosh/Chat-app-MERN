@@ -1,8 +1,11 @@
-const asyncHandler = require("express-async-handler");
-const Message = require("../models/messageModel");
-const User = require("../models/userModel");
-const Chat = require("../models/chatModel");
-
+// const asyncHandler = require("express-async-handler");
+// const Message = require("../models/messageModel");
+// const User = require("../models/userModel");
+// const Chat = require("../models/chatModel");
+import asyncHandler from "express-async-handler";
+import Message from "../models/messageModel.js";
+import User from "../models/userModel.js";
+import Chat from "../models/chatModel.js";
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
@@ -54,4 +57,5 @@ const sendMessage = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { allMessages, sendMessage };
+//module.exports = { allMessages, sendMessage };
+export { allMessages, sendMessage };

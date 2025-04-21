@@ -1,6 +1,9 @@
-const asyncHandler = require("express-async-handler");
-const Chat = require("../models/chatModel");
-const User = require("../models/userModel");
+// const asyncHandler = require("express-async-handler");
+// const Chat = require("../models/chatModel");
+// const User = require("../models/userModel");
+import asyncHandler from "express-async-handler";
+import Chat from "../models/chatModel.js";
+import User from "../models/userModel.js";
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -193,11 +196,20 @@ const addToGroup = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = {
+// module.exports = {
+//   accessChat,
+//   fetchChats,
+//   createGroupChat,
+//   renameGroup,
+//   addToGroup,
+//   removeFromGroup,
+// };
+
+export {
   accessChat,
   fetchChats,
   createGroupChat,
   renameGroup,
   addToGroup,
-  removeFromGroup,
+  removeFromGroup
 };

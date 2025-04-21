@@ -1,7 +1,9 @@
-const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
-const generateToken = require("../config/generateToken");
-
+// const asyncHandler = require("express-async-handler");
+// const User = require("../models/userModel");
+// const generateToken = require("../config/generateToken");
+import asyncHandler from "express-async-handler";
+import User from "../models/userModel.js";
+import generateToken from "../config/generateToken.js";
 //@description     Get or Search all users
 //@route           GET /api/user?search=
 //@access          Public
@@ -82,4 +84,5 @@ const authUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { allUsers, registerUser, authUser };
+//module.exports = { allUsers, registerUser, authUser };
+export { allUsers, registerUser, authUser };

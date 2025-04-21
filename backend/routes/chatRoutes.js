@@ -1,13 +1,24 @@
-const express = require("express");
-const {
+//const express = require("express");
+// const {
+//   accessChat,
+//   fetchChats,
+//   createGroupChat,
+//   removeFromGroup,
+//   addToGroup,
+//   renameGroup,
+// } = require("../controllers/chatControllers");
+// const { protect } = require("../middleware/authMiddleware");
+import express from 'express';
+import {
   accessChat,
   fetchChats,
   createGroupChat,
   removeFromGroup,
   addToGroup,
-  renameGroup,
-} = require("../controllers/chatControllers");
-const { protect } = require("../middleware/authMiddleware");
+  renameGroup
+} from "../controllers/chatControllers.js";
+import { protect } from "../middleware/authMiddleware.js";
+
 
 const router = express.Router();
 
@@ -18,4 +29,5 @@ router.route("/rename").put(protect, renameGroup);
 router.route("/groupremove").put(protect, removeFromGroup);
 router.route("/groupadd").put(protect, addToGroup);
 
-module.exports = router;
+//module.exports = router;
+export default router;
