@@ -99,104 +99,131 @@
 //     socket.leave(socket.id);
 //   });
 // });
-import dotenv from 'dotenv';
-dotenv.config();
 import express from 'express';
 import mongoose from 'mongoose';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import colors from 'colors';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import connectDB from './config/db.js';
-import userRoutes from './routes/userRoutes.js';
-import chatRoutes from './routes/chatRoutes.js';
-import messageRoutes from './routes/messageRoutes.js';
-import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import dotenv from 'dotenv';
 
-// ES Modules equivalent of __dirname
+// Initialize Express
+const app = express();
+
+// Configure environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-console.log('MongoDB URI:', process.env.MONGO_URI); 
-// Connect to MongoDB
-connectDB();
+// Database Connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB Connected');
+  } catch (err) {
+    console.error('MongoDB Connection Error:', err.message);
+    process.exit(1);
+  }
+};
 
-// Initialize Express app
-const app = express();
-app.use(express.json()); // to accept JSON data
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json());
+app.use(cookieParser());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
-app.use('/api/user', userRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/message', messageRoutes);
-
-// -------------------------- Deployment Setup ---------------------------
-const __dirname1 = path.resolve();
-
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname1, '/frontend/build')));
-
-  app.get('*', (req, res) =>
-    res.sendFile(path.resolve(__dirname1, 'frontend', 'build', 'index.html'))
-  );
-} else {
-  app.get('/', (req, res) => {
-    res.send('API is running successfully');
-  });
-}
-// -------------------------- Deployment Setup ---------------------------
-
-// Error Handlers
-app.use(notFound);
-app.use(errorHandler);
-
-// Create HTTP server
-const PORT = process.env.PORT || 5000;
-const httpServer = createServer(app);
-
-// Socket.io setup
-const io = new Server(httpServer, {
-  pingTimeout: 60000,
-  cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+// File Upload Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'backend/uploads/');
   },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
 });
 
-io.on('connection', (socket) => {
-  console.log('Connected to socket.io');
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
-  socket.on('setup', (userData) => {
-    socket.join(userData._id);
-    socket.emit('connected');
-  });
+// User Model
+const User = mongoose.model('User', new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  picture: { type: String }
+}, { timestamps: true }));
 
-  socket.on('join chat', (room) => {
-    socket.join(room);
-    console.log(`User Joined Room: ${room}`);
-  });
+// Routes
+app.post('/api/register', upload.single('picture'), async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    
+    // Validation
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
 
-  socket.on('typing', (room) => socket.in(room).emit('typing'));
-  socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
+    // Check if user exists
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
 
-  socket.on('new message', (newMessageReceived) => {
-    const chat = newMessageReceived.chat;
-
-    if (!chat.users) return console.log('chat.users not defined');
-
-    chat.users.forEach((user) => {
-      if (user._id === newMessageReceived.sender._id) return;
-      socket.in(user._id).emit('message received', newMessageReceived);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create new user
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+      picture: req.file ? `/uploads/${req.file.filename}` : undefined
     });
-  });
 
-  socket.off('setup', () => {
-    console.log('USER DISCONNECTED');
-    socket.leave(socket.id);
-  });
+    await user.save();
+
+    // Generate token
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      picture: user.picture
+    });
+
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
 });
 
-// Start server
-httpServer.listen(PORT, () => {
-  console.log(colors.yellow.bold(`Server running on PORT ${PORT}`));
+// Start Server
+const PORT = process.env.PORT || 5000;
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Frontend: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  });
+};
+
+startServer().catch(err => {
+  console.error('Server startup error:', err);
+  process.exit(1);
 });
