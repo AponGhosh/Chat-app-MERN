@@ -5,9 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node ./server.js",
-    "server": "nodemon ./server.js",
-    "build": "npm install --legacy-peer-deps && npm install --legacy-peer-deps --prefix frontend && npm run build --prefix frontend"
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js",
+    "client": "cd frontend && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "keywords": [
     "mern",
@@ -16,8 +17,8 @@
   "author": "Apon Ghosh",
   "license": "AG",
   "dependencies": {
-    "@chakra-ui/react": "^2.0.0",
     "@chakra-ui/icons": "^2.0.0",
+    "@chakra-ui/react": "^2.0.0",
     "@emotion/react": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "axios": "^1.0.0",
@@ -32,13 +33,17 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "4.1",
     "mongoose": "^7.8.6",
-    "nodemon": "^2.0.7",
+    "multer": "^1.4.5-lts.2",
     "radium": "^0.26.0",
-    "react": "^16.14.0",
+    "react": "^18.3.1",
     "react-chips": "^0.8.0",
-    "react-dom": "^16.14.0",
+    "react-dom": "^18.3.1",
     "react-icons": "^4.2.0",
     "react-router-dom": "^6.0.0",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.10"
   }
 }
