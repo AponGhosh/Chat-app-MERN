@@ -100,6 +100,7 @@
 //   });
 // });
 import express from 'express';
+import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -108,7 +109,8 @@ import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+
+
 
 // Initialize Express
 const app = express();
@@ -119,15 +121,31 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Database Connection
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB Connected');
-  } catch (err) {
-    console.error('MongoDB Connection Error:', err.message);
-    process.exit(1);
-  }
-};
+// const connectDB = async () => {
+//   try {
+//     await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+//     console.log('MongoDB Connected');
+//   } catch (err) {
+//     console.error('MongoDB Connection Error:', err.message);
+//     process.exit(1);
+//   }
+// };
+// MongoDB connection URI
+const mongoURI = process.env.MONGO_URI;
+
+if (!mongoURI) {
+  console.error('MongoDB URI is missing from environment variables');
+  process.exit(1);  // Exit if URI is missing
+}
+
+// Connect to MongoDB
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
 // Middleware
 app.use(cors({
