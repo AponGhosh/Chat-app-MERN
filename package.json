@@ -1,46 +1,12 @@
 {
   "name": "chat-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "backend/server.js",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "server": "nodemon backend/server.js",
-    "client": "cd frontend && npm start",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
-  },
-  "keywords": [
-    "mern",
-    "chat-app"
-  ],
-  "author": "Apon Ghosh",
-  "license": "AG",
-  "dependencies": {
-    "@chakra-ui/icons": "^2.0.0",
-    "@chakra-ui/react": "^2.0.0",
-    "@emotion/react": "^11.4.0",
-    "@emotion/styled": "^11.3.0",
-    "axios": "^1.0.0",
-    "bcryptjs": "^2.4.3",
-    "colors": "^1.4.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^4.21.2",
-    "express-async-handler": "^1.2.0",
-    "framer-motion": "^4.1.17",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "4.1",
-    "mongoose": "^7.8.6",
-    "multer": "^1.4.5-lts.2",
-    "radium": "^0.26.0",
-    "react": "^18.3.1",
-    "react-chips": "^0.8.0",
-    "react-dom": "^18.3.1",
-    "react-icons": "^4.2.0",
-    "react-router-dom": "^6.0.0",
-    "socket.io": "^4.8.1"
+    "install-all": "npm install --prefix backend && npm install --prefix frontend",
+    "start": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\"",
+    "server": "npm run dev --prefix backend",
+    "client": "npm start --prefix frontend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
